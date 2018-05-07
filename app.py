@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 import numpy as np
 
@@ -12,11 +10,9 @@ from flask import Flask, jsonify, render_template
 app = Flask(__name__)
 
 
-#################################################
-# Database Setup
-#################################################
-dbfile = os.path.join('db', 'belly_button_biodiversity.sqlite')
-engine = create_engine(f"sqlite:///{dbfile}")
+
+
+engine = create_engine("sqlite:///belly_button_biodiversity.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -34,13 +30,13 @@ session = Session(engine)
 
 @app.route("/")
 def index():
-    """Return the homepage."""
+
     return render_template('index.html')
 
 
 @app.route('/names')
 def names():
-    """Return a list of sample names."""
+
 
     # Use Pandas to perform the sql query
     stmt = session.query(Samples).statement
@@ -53,7 +49,7 @@ def names():
 
 @app.route('/otu')
 def otu():
-    """Return a list of OTU descriptions."""
+    
     results = session.query(OTU.lowest_taxonomic_unit_found).all()
 
     # Use numpy ravel to extract list of tuples into a list of OTU descriptions
@@ -63,13 +59,13 @@ def otu():
 
 @app.route('/metadata/<sample>')
 def sample_metadata(sample):
-    """Return the MetaData for a given sample."""
+   
     sel = [Samples_Metadata.SAMPLEID, Samples_Metadata.ETHNICITY,
            Samples_Metadata.GENDER, Samples_Metadata.AGE,
            Samples_Metadata.LOCATION, Samples_Metadata.BBTYPE]
 
-    # sample[3:] strips the `BB_` prefix from the sample name to match
-    # the numeric value of `SAMPLEID` from the database
+    
+    # matches the numeric value of `SAMPLEID` from the database
     results = session.query(*sel).\
         filter(Samples_Metadata.SAMPLEID == sample[3:]).all()
 
@@ -84,7 +80,6 @@ def sample_metadata(sample):
         sample_metadata['BBTYPE'] = result[5]
 
     return jsonify(sample_metadata)
-
 
 @app.route('/wfreq/<sample>')
 def sample_wfreq(sample):
@@ -101,7 +96,7 @@ def sample_wfreq(sample):
 
 @app.route('/samples/<sample>')
 def samples(sample):
-    """Return a list dictionaries containing `otu_ids` and `sample_values`."""
+    
     stmt = session.query(Samples).statement
     df = pd.read_sql_query(stmt, session.bind)
 
